@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -28,4 +29,6 @@ public class Instrumento extends Base {
     @JoinColumn(name = "fk_categoria")
     private Categoria categoria;
 
+//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "instrumento", fetch = FetchType.EAGER)
+//    private List<PedidoDetalle> detalles;
 }

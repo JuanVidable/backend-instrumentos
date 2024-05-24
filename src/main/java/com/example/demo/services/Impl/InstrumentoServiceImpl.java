@@ -1,8 +1,10 @@
-package com.example.demo.services;
+package com.example.demo.services.Impl;
 
 import com.example.demo.entities.Instrumento;
 import com.example.demo.repositories.BaseRepository;
 import com.example.demo.repositories.InstrumentoRepository;
+import com.example.demo.services.Base.BaseServiceImpl;
+import com.example.demo.services.InstrumentoService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

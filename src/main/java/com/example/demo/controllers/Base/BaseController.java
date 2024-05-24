@@ -1,4 +1,4 @@
-package com.example.demo.controllers;
+package com.example.demo.controllers.Base;
 
 import com.example.demo.entities.Base;
 import org.springframework.http.ResponseEntity;
