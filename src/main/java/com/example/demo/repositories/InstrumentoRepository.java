@@ -12,7 +12,7 @@ public interface InstrumentoRepository extends BaseRepository<Instrumento, Long>
     @Query(value = "SELECT i.* " +
             "FROM instrumento i " +
             "JOIN categoria c ON i.fk_categoria = c.id " +
-            "WHERE c.denominacion = :palabra",
+            "WHERE c.denominacion LIKE %:palabra%",
             nativeQuery = true)
     List<Instrumento> search(@Param("palabra") String palabra);
 }

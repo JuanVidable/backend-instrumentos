@@ -1,13 +1,24 @@
 package com.example.demo.entities;
 
 import com.example.demo.services.InstrumentoService;
-import com.lowagie.text.Font;
+import com.lowagie.text.*;
 
 import java.awt.*;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.lowagie.text.Font;
+import com.lowagie.text.Image;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfTable;
+import com.lowagie.text.pdf.PdfWriter;
 import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
@@ -26,6 +37,7 @@ public class InstrumentoPrintManager {
     public InstrumentoPrintManager(InstrumentoService instrumentoService) {
         this.instrumentoService = instrumentoService;
     }
+
 
 
     protected static Font titulo = new Font(Font.COURIER, 14, Font.BOLD);
@@ -81,5 +93,109 @@ public class InstrumentoPrintManager {
             throw new RuntimeException("Error al generar el archivo de Excel", e);
         }
         return libro;
+
+
     }
+
+    public static void addMetaData(Document document) {
+        document.addTitle("Reporte PDF");
+        document.addSubject("Ejemplo PDF");
+        document.addKeywords("PDF");
+        document.addAuthor("Juan Vidable");
+        document.addCreator("Juan Vidable");
+    }
+
+    private void addTableCell(PdfPTable table, String header, String value, int fontStyle) {
+        Font headerFont = new Font(Font.HELVETICA, 12, fontStyle);
+        Font valueFont = new Font(Font.HELVETICA, 12);
+
+        PdfPCell headerCell = new PdfPCell(new Phrase(header, headerFont));
+        headerCell.setBorder(Rectangle.NO_BORDER);
+        table.addCell(headerCell);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, valueFont));
+        valueCell.setBorder(Rectangle.NO_BORDER);
+        table.addCell(valueCell);
+    }
+    public static void addEmptyLine(Document document, int number) {
+        try {
+            Paragraph espacio = new Paragraph();
+            for (int i = 0; i < number; i++) {
+                espacio.add(new Paragraph(" "));
+            }
+            document.add(espacio);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setLineaReporte(Document document) throws DocumentException, MalformedURLException, IOException{
+        PdfPTable linea = new PdfPTable(1);
+        linea.setWidthPercentage(100.0f);
+        PdfPCell cellOne = new PdfPCell(new Paragraph(""));
+        cellOne.setBorder(Rectangle.BOTTOM);
+        cellOne.setBorder(Rectangle.TOP);
+        linea.addCell(cellOne);
+
+        document.add(linea);
+    }
+
+    public void imprimirInstrumentosPdf(Long idInstrumento, ByteArrayOutputStream outputStream) throws Exception {
+        try {
+            System.out.println("Empiezo a imprimir pdf");
+            Document document = new Document(PageSize.A4, 30, 30, 0, 30);
+            addMetaData(document);
+
+            Instrumento instrumento = instrumentoService.findById(idInstrumento);
+            PdfWriter.getInstance(document, outputStream);
+            document.open();
+
+            // Título del producto
+            Paragraph paragraph = new Paragraph(instrumento.getInstrumento().toUpperCase(), new Font(Font.HELVETICA, 18, Font.BOLD));
+            paragraph.setAlignment(Element.ALIGN_CENTER);
+            document.add(paragraph);
+
+            // Espacio entre el título y la imagen
+            addEmptyLine(document, 1);
+
+            // Imagen del producto
+            String imageUrl = "http://localhost:9000/images/" + instrumento.getImagen();
+            Image imgInstrumento = Image.getInstance(new URL(imageUrl));
+            imgInstrumento.setAlignment(Image.ALIGN_CENTER);
+            imgInstrumento.scaleAbsolute(300f, 200f);
+            document.add(imgInstrumento);
+
+            // Espacio entre la imagen y la descripción
+            addEmptyLine(document, 2);
+
+            // Tabla de características y precio
+            PdfPTable table = new PdfPTable(2);
+            table.setWidthPercentage(100);
+
+            // Agregar filas a la tabla
+            addTableCell(table, "Instrumento:", instrumento.getInstrumento(), Font.BOLD);
+            addTableCell(table, "Precio:", "$ " + String.valueOf(instrumento.getPrecio()), Font.BOLD);
+            addTableCell(table, "Marca:", instrumento.getMarca(), Font.BOLD);
+            addTableCell(table, "Modelo:", instrumento.getModelo(), Font.BOLD);
+
+            // Espacio para la descripción
+            PdfPCell descripcionCell = new PdfPCell(new Phrase("Descripción:", new Font(Font.HELVETICA, 12, Font.BOLD)));
+            descripcionCell.setColspan(2);
+            descripcionCell.setBorder(Rectangle.NO_BORDER);
+            table.addCell(descripcionCell);
+
+            PdfPCell descripcionValueCell = new PdfPCell(new Phrase(instrumento.getDescripcion(), new Font(Font.HELVETICA, 12)));
+            descripcionValueCell.setColspan(2);
+            descripcionValueCell.setBorder(Rectangle.NO_BORDER);
+            table.addCell(descripcionValueCell);
+
+            document.add(table);
+
+            System.out.println("Document close");
+            document.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }

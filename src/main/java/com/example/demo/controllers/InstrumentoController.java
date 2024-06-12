@@ -59,4 +59,26 @@ public class InstrumentoController extends BaseControllerImpl<Instrumento, Instr
         }
     }
 
+    @GetMapping("downloadPdfPlato/{idInstrumento}")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable String idInstrumento) {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            InstrumentoPrintManager mPrintInstrumento = new InstrumentoPrintManager(instrumentoService);
+            // Crear un nuevo documento
+            mPrintInstrumento.imprimirInstrumentosPdf(Long.parseLong(idInstrumento), outputStream);
+
+            // Establecer las cabeceras de la respuesta
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("application/pdf"));
+            headers.setContentDispositionFormData("attachment", "documento.pdf");
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+            // Devolver el archivo PDF como parte de la respuesta HTTP
+            return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
